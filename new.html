@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus Canteen Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .gradient-bg { background: linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%); }
+        .pulse { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-orange-50 to-white min-h-screen">
+
+    <!-- Login Screen -->
+    <div id="auth-screen" class="min-h-screen flex items-center justify-center px-4">
+        <div class="max-w-md w-full">
+            <div class="bg-white rounded-2xl shadow-2xl p-8">
+                <div class="text-center mb-8">
+                    <div class="w-20 h-20 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-white text-3xl">🍽️</span>
+                    </div>
+                    <h1 class="text-3xl font-bold text-gray-800">Campus Canteen</h1>
+                    <p class="text-gray-600 mt-2">Smart Management System</p>
+                </div>
+
+                <div id="login-form">
+                    <div class="mb-6">
+                        <label class="block text-gray-700 text-sm font-medium mb-2">User Type</label>
+                        <select id="user-type" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+                            <option value="student">Student</option>
+                            <option value="owner">Canteen Owner</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-medium mb-2">Username</label>
+                        <input type="text" id="login-username" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" placeholder="Enter username" value="aryan">
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-gray-700 text-sm font-medium mb-2">Password</label>
+                        <input type="password" id="login-password" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" placeholder="Enter password" value="password">
+                    </div>
+                    <button onclick="login()" class="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition-colors font-medium mb-4">Login</button>
+                    
+                    <div class="mt-6 p-4 bg-orange-50 rounded-lg">
+                        <p class="text-sm text-orange-700 font-medium mb-2">Demo Credentials:</p>
+                        <p class="text-xs text-orange-600">Student: aryan / password</p>
+                        <p class="text-xs text-orange-600">Owner: admin / admin123</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Dashboard -->
+    <div id="student-dashboard" class="hidden">
+        <nav class="bg-white shadow-lg sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-10 h-10 bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
+                            <span class="text-white font-bold text-lg">🍽️</span>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-bold text-gray-800">Campus Canteen</h1>
+                            <p class="text-sm text-gray-600" id="student-greeting">Hi Student 👋</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button onclick="showStudentSection('menu')" class="text-orange-500 font-medium">Menu</button>
+                        <button onclick="showStudentSection('booking')" class="text-gray-600 hover:text-orange-500 font-medium">Book Seat</button>
+                        <button onclick="showStudentSection('orders')" class="text-gray-600 hover:text-orange-500 font-medium">Orders</button>
+                        <button onclick="toggleCart()" class="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors">
+                            🛒 Cart (<span id="cart-count">0</span>)
+                        </button>
+                        <button onclick="logout()" class="text-gray-600 hover:text-orange-500 font-medium">Logout</button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Notices Display -->
+            <div id="notices-display" class="mb-6"></div>
+
+            <!-- Menu Section -->
+            <div id="student-menu-section" class="student-section">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">Today's Menu</h2>
+                <div id="menu-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+            </div>
+
+            <!-- Booking Section -->
+            <div id="student-booking-section" class="student-section hidden">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">Book a Seat</h2>
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-semibold mb-4">Select Time Slot</h3>
+                    <div id="time-slots" class="grid grid-cols-2 gap-4 mb-6"></div>
+                    <div id="selected-slot-info" class="hidden mb-4 p-4 bg-orange-50 rounded-lg">
+                        <p class="text-orange-700">Selected: <span id="selected-time-text"></span></p>
+                    </div>
+                    <button onclick="bookSeat()" id="book-btn" class="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition-colors font-medium" disabled>Select a Time Slot</button>
+                </div>
+            </div>
+
+            <!-- Orders Section -->
+            <div id="student-orders-section" class="student-section hidden">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">My Orders & Bookings</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <h3 class="text-xl font-semibold mb-4">Recent Orders</h3>
+                        <div id="orders-list"></div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <h3 class="text-xl font-semibold mb-4">Seat Bookings</h3>
+                        <div id="bookings-list"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cart Sidebar -->
+        <div id="cart-sidebar" class="fixed right-0 top-0 h-full w-80 bg-white shadow-2xl transform translate-x-full transition-transform duration-300 z-50">
+            <div class="p-6 border-b">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-semibold">Your Cart</h3>
+                    <button onclick="toggleCart()" class="text-gray-500 hover:text-gray-700 text-2xl">×</button>
+                </div>
+            </div>
+            <div id="cart-items" class="p-6 flex-1 overflow-y-auto" style="height: calc(100vh - 200px);"></div>
+            <div class="p-6 border-t bg-gray-50">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="font-semibold">Total:</span>
+                    <span id="cart-total" class="font-bold text-xl text-orange-600">$0.00</span>
+                </div>
+                <button onclick="placeOrder()" id="place-order-btn" class="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition-colors font-medium" disabled>Place Order</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Owner Dashboard -->
+    <div id="owner-dashboard" class="hidden">
+        <nav class="bg-white shadow-lg sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-10 h-10 bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
+                            <span class="text-white font-bold text-lg">👨‍💼</span>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-bold text-gray-800">Canteen Management</h1>
+                            <p class="text-sm text-gray-600" id="owner-greeting">Hi Owner 👋</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button onclick="showOwnerSection('dashboard')" class="text-orange-500 font-medium">Dashboard</button>
+                        <button onclick="showOwnerSection('menu')" class="text-gray-600 hover:text-orange-500 font-medium">Menu</button>
+                        <button onclick="showOwnerSection('bookings')" class="text-gray-600 hover:text-orange-500 font-medium">Bookings</button>
+                        <button onclick="showOwnerSection('orders')" class="text-gray-600 hover:text-orange-500 font-medium">Orders</button>
+                        <button onclick="showOwnerSection('notices')" class="text-gray-600 hover:text-orange-500 font-medium">Notices</button>
+                        <button onclick="logout()" class="text-gray-600 hover:text-orange-500 font-medium">Logout</button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Dashboard Overview -->
+            <div id="owner-dashboard-section" class="owner-section">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">Dashboard Overview</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-600 text-sm">Today's Revenue</p>
+                                <p class="text-2xl font-bold text-green-600" id="today-revenue">$0</p>
+                            </div>
+                            <div class="bg-green-100 p-3 rounded-full">
+                                <span class="text-green-600 text-xl">💰</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-600 text-sm">Orders Today</p>
+                                <p class="text-2xl font-bold text-blue-600" id="today-orders">0</p>
+                            </div>
+                            <div class="bg-blue-100 p-3 rounded-full">
+                                <span class="text-blue-600 text-xl">📋</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-600 text-sm">Seat Bookings</p>
+                                <p class="text-2xl font-bold text-orange-600" id="today-bookings">0</p>
+                            </div>
+                            <div class="bg-orange-100 p-3 rounded-full">
+                                <span class="text-orange-600 text-xl">🪑</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-600 text-sm">Active Notices</p>
+                                <p class="text-2xl font-bold text-purple-600" id="active-notices-count">0</p>
+                            </div>
+                            <div class="bg-purple-100 p-3 rounded-full">
+                                <span class="text-purple-600 text-xl">📢</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Menu Management -->
+            <div id="owner-menu-section" class="owner-section hidden">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">Menu Management</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-2">
+                        <div class="bg-white rounded-xl shadow-lg p-6">
+                            <h3 class="text-xl font-semibold mb-4">Current Menu Items</h3>
+                            <div id="owner-menu-list"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="bg-white rounded-xl shadow-lg p-6">
+                            <h3 class="text-xl font-semibold mb-4">Add New Item</h3>
+                            <form id="add-item-form" class="space-y-4">
+                                <input type="text" id="item-name" placeholder="Item Name" required class="w-full p-3 border border-gray-300 rounded-lg">
+                                <input type="number" id="item-price" placeholder="Price ($)" step="0.01" min="0" required class="w-full p-3 border border-gray-300 rounded-lg">
+                                <select id="item-category" required class="w-full p-3 border border-gray-300 rounded-lg">
+                                    <option value="">Select Category</option>
+                                    <option value="breakfast">Breakfast</option>
+                                    <option value="lunch">Lunch</option>
+                                    <option value="snacks">Snacks</option>
+                                    <option value="beverages">Beverages</option>
+                                </select>
+                                <textarea id="item-description" placeholder="Description" rows="3" required class="w-full p-3 border border-gray-300 rounded-lg"></textarea>
+                                <button type="submit" class="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition-colors font-medium">Add Item</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bookings Management -->
+            <div id="owner-bookings-section" class="owner-section hidden">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">Seat Booking Management</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <h3 class="text-lg font-semibold mb-4">Seat Capacity Settings</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Total Seats per Slot</label>
+                                <input type="number" id="total-seats" min="1" max="100" value="20" class="w-full p-3 border border-gray-300 rounded-lg">
+                            </div>
+                            <button onclick="updateCapacity()" class="w-full bg-orange-500 text-white py-2 rounded-lg hover:bg-orange-600 transition-colors">Update Capacity</button>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-2 bg-white rounded-xl shadow-lg p-6">
+                        <h3 class="text-xl font-semibold mb-4">Booking Overview</h3>
+                        <div id="booking-overview"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Orders Management -->
+            <div id="owner-orders-section" class="owner-section hidden">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">Order Management</h2>
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-semibold mb-4">Active Orders</h3>
+                    <div id="owner-orders-list"></div>
+                </div>
+            </div>
+
+            <!-- Notices Management -->
+            <div id="owner-notices-section" class="owner-section hidden">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">Notices & Announcements</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-2">
+                        <div class="bg-white rounded-xl shadow-lg p-6">
+                            <h3 class="text-xl font-semibold mb-4">Active Notices</h3>
+                            <div id="notices-list"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="bg-white rounded-xl shadow-lg p-6">
+                            <h3 class="text-xl font-semibold mb-4">Create Notice</h3>
+                            <form id="notice-form" class="space-y-4">
+                                <select id="notice-type" class="w-full p-3 border border-gray-300 rounded-lg">
+                                    <option value="info">Information</option>
+                                    <option value="warning">Warning</option>
+                                    <option value="closure">Canteen Closure</option>
+                                    <option value="special">Special Offer</option>
+                                </select>
+                                <input type="text" id="notice-title" placeholder="Notice title" required class="w-full p-3 border border-gray-300 rounded-lg">
+                                <textarea id="notice-message" placeholder="Notice message" rows="4" required class="w-full p-3 border border-gray-300 rounded-lg"></textarea>
+                                <input type="datetime-local" id="notice-expiry" class="w-full p-3 border border-gray-300 rounded-lg">
+                                <div class="flex items-center space-x-2">
+                                    <input type="checkbox" id="notice-urgent" class="rounded">
+                                    <label for="notice-urgent" class="text-sm text-gray-600">Mark as urgent</label>
+                                </div>
+                                <button type="submit" class="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition-colors font-medium">Publish Notice</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Receipt Modal -->
+    <div id="receipt-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl p-8 max-w-md mx-4">
+            <div class="text-center mb-6">
+                <div class="text-4xl mb-2">🧾</div>
+                <h3 class="text-2xl font-bold text-gray-800">Order Receipt</h3>
+            </div>
+            <div id="receipt-content" class="space-y-4 mb-6"></div>
+            <div class="flex justify-center">
+                <button onclick="closeReceipt()" class="px-8 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="notification" class="fixed top-4 right-4 bg-white border-l-4 border-green-500 rounded-lg shadow-lg p-4 transform translate-x-full transition-transform duration-300 z-50">
+        <div class="flex items-center space-x-3">
+            <span id="notification-icon" class="text-2xl">✅</span>
+            <div>
+                <p id="notification-title" class="font-semibold text-gray-800">Success!</p>
+                <p id="notification-message" class="text-sm text-gray-600">Operation completed</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simplified Global Variables
+        var currentUser = null;
+        var cart = [];
+        var selectedSlot = null;
+        var notices = [];
+        var orders = [];
+        var bookings = [];
+        var ownerOrders = [];
+        var totalSeats = 20;
+
+        // Sample Menu Data
+        var menuItems = [
+            { id: 1, name: "Grilled Chicken Sandwich", price: 8.99, category: "lunch", description: "Juicy grilled chicken with fresh vegetables", emoji: "🥪", available: true },
+            { id: 2, name: "Caesar Salad", price: 6.99, category: "lunch", description: "Fresh romaine lettuce with caesar dressing", emoji: "🥗", available: true },
+            { id: 3, name: "Pancakes", price: 5.99, category: "breakfast", description: "Fluffy pancakes with maple syrup", emoji: "🥞", available: true },
+            { id: 4, name: "Coffee", price: 2.99, category: "beverages", description: "Freshly brewed coffee", emoji: "☕", available: true },
+            { id: 5, name: "Chocolate Muffin", price: 3.49, category: "snacks", description: "Rich chocolate chip muffin", emoji: "🧁", available: true }
+        ];
+
+        // Time Slots Data
+        var timeSlots = [
+            { time: '9:00-10:00', label: '9:00 - 10:00 AM', booked: 8, total: totalSeats },
+            { time: '10:00-11:00', label: '10:00 - 11:00 AM', booked: 12, total: totalSeats },
+            { time: '11:00-12:00', label: '11:00 - 12:00 PM', booked: 5, total: totalSeats },
+            { time: '12:00-13:00', label: '12:00 - 1:00 PM', booked: 18, total: totalSeats },
+            { time: '13:00-14:00', label: '1:00 - 2:00 PM', booked: 10, total: totalSeats },
+            { time: '14:00-15:00', label: '2:00 - 3:00 PM', booked: 2, total: totalSeats }
+        ];
+
+        // Authentication Functions
+        function login() {
+            var username = document.getElementById('login-username').value.trim().toLowerCase();
+            var password = document.getElementById('login-password').value.trim();
+            var userType = document.getElementById('user-type').value;
+            
+            console.log('Login attempt:', username, password, userType); // Debug log
+            
+            var validUsers = {
+                'aryan': { password: 'password', type: 'student', name: 'Aryan Kumar' },
+                'admin': { password: 'admin123', type: 'owner', name: 'Admin User' }
+            };
+
+            if (validUsers[username] && validUsers[username].password === password && validUsers[username].type === userType) {
+                currentUser = {
+                    name: validUsers[username].name,
+                    email: username + '@campus.edu',
+                    type: validUsers[username].type,
+                    id: validUsers[username].type === 'student' ? 'STU001' : 'ADM001'
+                };
+
+                console.log('Login successful for:', currentUser); // Debug log
+
+                document.getElementById('auth-screen').classList.add('hidden');
+                
+                if (currentUser.type === 'student') {
+                    document.getElementById('student-dashboard').classList.remove('hidden');
+                    document.getElementById('student-greeting').textContent = 'Hi ' + currentUser.name.split(' ')[0] + ' 👋';
+                    initStudent();
+                } else {
+                    document.getElementById('owner-dashboard').classList.remove('hidden');
+                    document.getElementById('owner-greeting').textContent = 'Hi ' + currentUser.name.split(' ')[0] + ' 👋';
+                    initOwner();
+                }
+                
+                showNotification('✅', 'Login Successful', 'Welcome back, ' + currentUser.name + '!');
+            } else {
+                console.log('Login failed for:', username, password, userType); // Debug log
+                showNotification('❌', 'Login Failed', 'Check username, password, and user type match.');
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            cart = [];
+            selectedSlot = null;
+            document.getElementById('student-dashboard').classList.add('hidden');
+            document.getElementById('owner-dashboard').classList.add('hidden');
+            document.getElementById('auth-screen').classList.remove('hidden');
+            showNotification('👋', 'Logged Out', 'See you next time!');
+        }
+
+        // Student Functions
+        function initStudent() {
+            displayMenu();
+            displayTimeSlots();
+            displayNotices();
+            updateCartDisplay();
+            displayOrders();
+            displayBookings();
+        }
+
+        function showStudentSection(section) {
+            var sections = document.querySelectorAll('.student-section');
+            for (var i = 0; i < sections.length; i++) {
+                sections[i].classList.add('hidden');
+            }
+            document.getElementById('student-' + section + '-section').classList.remove('hidden');
+        }
+
+        function displayMenu() {
+            var menuGrid = document.getElementById('menu-grid');
+            var html = '';
+            
+            for (var i = 0; i < menuItems.length; i++) {
+                var item = menuItems[i];
+                if (item.available) {
+                    html += '<div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">';
+                    html += '<div class="flex items-center justify-between mb-3">';
+                    html += '<span class="text-4xl">' + item.emoji + '</span>';
+                    html += '<span class="text-2xl font-bold text-orange-500">$' + item.price.toFixed(2) + '</span>';
+                    html += '</div>';
+                    html += '<h3 class="text-xl font-semibold text-gray-800 mb-2">' + item.name + '</h3>';
+                    html += '<p class="text-gray-600 mb-4 text-sm">' + item.description + '</p>';
+                    html += '<button onclick="addToCart(' + item.id + ')" class="w-full bg-orange-500 text-white py-2 rounded-lg hover:bg-orange-600 transition-colors font-medium">Add to Cart</button>';
+                    html += '</div>';
+                }
+            }
+            
+            menuGrid.innerHTML = html;
+        }
+
+        function displayNotices() {
+            var noticesDisplay = document.getElementById('notices-display');
+            var html = '';
+            
+            for (var i = 0; i < notices.length; i++) {
+                var notice = notices[i];
+                var bgClass = 'bg-blue-50 border-blue-500 text-blue-700';
+                var icon = 'ℹ️';
+                
+                if (notice.type === 'warning') {
+                    bgClass = 'bg-yellow-50 border-yellow-500 text-yellow-700';
+                    icon = '⚠️';
+                } else if (notice.type === 'closure') {
+                    bgClass = 'bg-red-50 border-red-500 text-red-700';
+                    icon = '🚫';
+                } else if (notice.type === 'special') {
+                    bgClass = 'bg-green-50 border-green-500 text-green-700';
+                    icon = '🎉';
+                }
+
+                html += '<div class="border-l-4 p-4 mb-4 ' + bgClass + '">';
+                html += '<div class="flex items-start space-x-3">';
+                html += '<span class="text-2xl">' + icon + '</span>';
+                html += '<div class="flex-1">';
+                html += '<h4 class="font-semibold text-lg">' + notice.title + '</h4>';
+                html += '<p class="mt-1">' + notice.message + '</p>';
+                html += '</div></div></div>';
+            }
+            
+            noticesDisplay.innerHTML = html;
+        }
+
+        function displayTimeSlots() {
+            var slotsContainer = document.getElementById('time-slots');
+            var html = '';
+            
+            for (var i = 0; i < timeSlots.length; i++) {
+                var slot = timeSlots[i];
+                var available = slot.total - slot.booked;
+                var statusClass = available > 0 ? 'text-green-600' : 'text-red-600';
+                var statusText = available > 0 ? available + ' seats available' : 'Full';
+                
+                html += '<button onclick="selectSlot(\'' + slot.time + '\', \'' + slot.label + '\', ' + available + ')" class="p-4 border-2 border-gray-200 rounded-lg hover:border-orange-500 transition-colors text-left">';
+                html += '<p class="font-medium">' + slot.label + '</p>';
+                html += '<p class="text-sm ' + statusClass + '">' + statusText + '</p>';
+                html += '</button>';
+            }
+            
+            slotsContainer.innerHTML = html;
+        }
+
+        function selectSlot(timeSlot, label, available) {
+            if (available <= 0) {
+                showNotification('❌', 'Slot Full', 'This time slot is fully booked');
+                return;
+            }
+            
+            selectedSlot = { time: timeSlot, label: label, available: available };
+            document.getElementById('selected-slot-info').classList.remove('hidden');
+            document.getElementById('selected-time-text').textContent = label;
+            
+            var bookBtn = document.getElementById('book-btn');
+            bookBtn.disabled = false;
+            bookBtn.textContent = 'Book Seat';
+        }
+
+        function bookSeat() {
+            if (!selectedSlot) return;
+            
+            var bookingId = 'BOOK' + Date.now().toString().slice(-6);
+            var newBooking = {
+                id: bookingId,
+                timeSlot: selectedSlot.label,
+                date: new Date().toLocaleDateString(),
+                status: 'confirmed'
+            };
+            
+            bookings.unshift(newBooking);
+            
+            // Update slot availability
+            for (var i = 0; i < timeSlots.length; i++) {
+                if (timeSlots[i].time === selectedSlot.time) {
+                    timeSlots[i].booked += 1;
+                    break;
+                }
+            }
+            
+            selectedSlot = null;
+            document.getElementById('selected-slot-info').classList.add('hidden');
+            document.getElementById('book-btn').disabled = true;
+            document.getElementById('book-btn').textContent = 'Select a Time Slot';
+            
+            displayTimeSlots();
+            displayBookings();
+            showNotification('🪑', 'Seat Booked!', 'Your seat has been booked for ' + newBooking.timeSlot);
+        }
+
+        function addToCart(itemId) {
+            var item = null;
+            for (var i = 0; i < menuItems.length; i++) {
+                if (menuItems[i].id === itemId) {
+                    item = menuItems[i];
+                    break;
+                }
+            }
+            
+            if (!item || !item.available) return;
+            
+            var existingItem = null;
+            for (var i = 0; i < cart.length; i++) {
+                if (cart[i].id === itemId) {
+                    existingItem = cart[i];
+                    break;
+                }
+            }
+            
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({
+                    id: item.id,
+                    name: item.name,
+                    price: item.price,
+                    emoji: item.emoji,
+                    quantity: 1
+                });
+            }
+            
+            updateCartDisplay();
+            showNotification('🛒', 'Added to Cart', item.name + ' added to your cart');
+        }
+
+        function updateCartDisplay() {
+            var cartCount = document.getElementById('cart-count');
+            var cartItems = document.getElementById('cart-items');
+            var cartTotal = document.getElementById('cart-total');
+            var placeOrderBtn = document.getElementById('place-order-btn');
+            
+            var totalItems = 0;
+            var totalPrice = 0;
+            
+            for (var i = 0; i < cart.length; i++) {
+                totalItems += cart[i].quantity;
+                totalPrice += cart[i].price * cart[i].quantity;
+            }
+            
+            cartCount.textContent = totalItems;
+            cartTotal.textContent = '$' + totalPrice.toFixed(2);
+            
+            if (cart.length === 0) {
+                cartItems.innerHTML = '<div class="text-center py-8 text-gray-500"><span class="text-4xl mb-2 block">🛒</span><p>Your cart is empty</p></div>';
+                placeOrderBtn.disabled = true;
+                placeOrderBtn.textContent = 'Add Items to Cart';
+            } else {
+                var html = '';
+                for (var i = 0; i < cart.length; i++) {
+                    var item = cart[i];
+                    html += '<div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg mb-3">';
+                    html += '<div class="flex items-center space-x-3">';
+                    html += '<span class="text-2xl">' + item.emoji + '</span>';
+                    html += '<div><h4 class="font-medium">' + item.name + '</h4>';
+                    html += '<p class="text-sm text-gray-600">$' + item.price.toFixed(2) + ' each</p></div></div>';
+                    html += '<div class="flex items-center space-x-2">';
+                    html += '<button onclick="updateQuantity(' + item.id + ', -1)" class="bg-gray-300 text-gray-700 w-8 h-8 rounded-full">-</button>';
+                    html += '<span class="font-medium">' + item.quantity + '</span>';
+                    html += '<button onclick="updateQuantity(' + item.id + ', 1)" class="bg-orange-500 text-white w-8 h-8 rounded-full">+</button>';
+                    html += '</div></div>';
+                }
+                cartItems.innerHTML = html;
+                placeOrderBtn.disabled = false;
+                placeOrderBtn.textContent = 'Place Order ($' + totalPrice.toFixed(2) + ')';
+            }
+        }
+
+        function updateQuantity(itemId, change) {
+            for (var i = 0; i < cart.length; i++) {
+                if (cart[i].id === itemId) {
+                    cart[i].quantity += change;
+                    if (cart[i].quantity <= 0) {
+                        cart.splice(i, 1);
+                    }
+                    break;
+                }
+            }
+            updateCartDisplay();
+        }
+
+        function toggleCart() {
+            var cartSidebar = document.getElementById('cart-sidebar');
+            cartSidebar.classList.toggle('translate-x-full');
+        }
+
+        function placeOrder() {
+            if (cart.length === 0) return;
+            
+            var orderId = 'ORD' + Date.now().toString().slice(-6);
+            var totalPrice = 0;
+            var itemsList = [];
+            
+            for (var i = 0; i < cart.length; i++) {
+                totalPrice += cart[i].price * cart[i].quantity;
+                itemsList.push(cart[i].name + ' (' + cart[i].quantity + ')');
+            }
+            
+            var newOrder = {
+                id: orderId,
+                items: itemsList,
+                itemDetails: cart.slice(),
+                total: totalPrice,
+                status: 'pending',
+                time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                date: new Date().toLocaleDateString()
+            };
+            
+            orders.unshift(newOrder);
+            ownerOrders.unshift({
+                id: orderId,
+                student: currentUser.name,
+                items: itemsList,
+                itemDetails: cart.slice(),
+                total: totalPrice,
+                status: 'pending',
+                time: newOrder.time,
+                date: newOrder.date
+            });
+            
+            cart = [];
+            updateCartDisplay();
+            toggleCart();
+            showReceipt(newOrder);
+            displayOrders();
+            
+            showNotification('✅', 'Order Placed!', 'Your order has been placed successfully');
+        }
+
+        function displayOrders() {
+            var ordersList = document.getElementById('orders-list');
+            var html = '';
+            
+            if (orders.length === 0) {
+                html = '<div class="text-center py-8 text-gray-500"><span class="text-4xl mb-2 block">🍽️</span><p>No orders yet</p></div>';
+            } else {
+                for (var i = 0; i < orders.length; i++) {
+                    var order = orders[i];
+                    var statusClass = 'bg-yellow-100 text-yellow-800';
+                    var statusIcon = '⏳';
+                    
+                    if (order.status === 'ready') {
+                        statusClass = 'bg-green-100 text-green-800';
+                        statusIcon = '✅';
+                    } else if (order.status === 'preparing') {
+                        statusClass = 'bg-blue-100 text-blue-800';
+                        statusIcon = '👨‍🍳';
+                    }
+                    
+                    html += '<div class="border border-gray-200 rounded-lg p-4 mb-4">';
+                    html += '<div class="flex justify-between items-start mb-2">';
+                    html += '<h4 class="font-semibold text-lg">' + order.id + '</h4>';
+                    html += '<span class="px-3 py-1 rounded-full text-sm ' + statusClass + '">' + statusIcon + ' ' + order.status + '</span>';
+                    html += '</div>';
+                    html += '<p class="text-sm text-gray-600 mb-2">Items: ' + order.items.join(', ') + '</p>';
+                    html += '<div class="flex justify-between items-center">';
+                    html += '<span class="font-bold text-lg text-orange-600">$' + order.total.toFixed(2) + '</span>';
+                    html += '<div class="text-right text-sm text-gray-500"><p>' + order.time + '</p><p>' + order.date + '</p></div>';
+                    html += '</div></div>';
+                }
+            }
+            
+            ordersList.innerHTML = html;
+        }
+
+        function displayBookings() {
+            var bookingsList = document.getElementById('bookings-list');
+            var html = '';
+            
+            if (bookings.length === 0) {
+                html = '<div class="text-center py-8 text-gray-500"><span class="text-4xl mb-2 block">🪑</span><p>No bookings yet</p></div>';
+            } else {
+                for (var i = 0; i < bookings.length; i++) {
+                    var booking = bookings[i];
+                    html += '<div class="border border-gray-200 rounded-lg p-4 mb-4">';
+                    html += '<div class="flex justify-between items-start mb-2">';
+                    html += '<h4 class="font-semibold text-lg">' + booking.id + '</h4>';
+                    html += '<span class="px-3 py-1 rounded-full text-sm bg-green-100 text-green-800">✅ ' + booking.status + '</span>';
+                    html += '</div>';
+                    html += '<p class="text-sm text-gray-600">Time: ' + booking.timeSlot + '</p>';
+                    html += '<p class="text-sm text-gray-500">Date: ' + booking.date + '</p>';
+                    html += '</div>';
+                }
+            }
+            
+            bookingsList.innerHTML = html;
+        }
+
+        // Owner Functions
+        function initOwner() {
+            updateOwnerDashboard();
+            displayOwnerMenu();
+            displayOwnerBookings();
+            displayOwnerOrders();
+            displayOwnerNotices();
+            setupOwnerForms();
+        }
+
+        function showOwnerSection(section) {
+            var sections = document.querySelectorAll('.owner-section');
+            for (var i = 0; i < sections.length; i++) {
+                sections[i].classList.add('hidden');
+            }
+            document.getElementById('owner-' + section + '-section').classList.remove('hidden');
+        }
+
+        function updateOwnerDashboard() {
+            var todayRevenue = 0;
+            for (var i = 0; i < ownerOrders.length; i++) {
+                todayRevenue += ownerOrders[i].total;
+            }
+            
+            document.getElementById('today-revenue').textContent = '$' + todayRevenue.toFixed(2);
+            document.getElementById('today-orders').textContent = ownerOrders.length;
+            document.getElementById('today-bookings').textContent = bookings.length;
+            document.getElementById('active-notices-count').textContent = notices.length;
+        }
+
+        function displayOwnerMenu() {
+            var menuList = document.getElementById('owner-menu-list');
+            var html = '';
+            
+            for (var i = 0; i < menuItems.length; i++) {
+                var item = menuItems[i];
+                html += '<div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg mb-4">';
+                html += '<div class="flex items-center space-x-4">';
+                html += '<span class="text-3xl">' + item.emoji + '</span>';
+                html += '<div>';
+                html += '<h4 class="font-semibold">' + item.name + '</h4>';
+                html += '<p class="text-sm text-gray-600">' + item.description + '</p>';
+                html += '<span class="px-2 py-1 rounded-full text-xs ' + (item.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800') + '">';
+                html += item.available ? 'Available' : 'Out of Stock';
+                html += '</span></div></div>';
+                html += '<div class="text-right">';
+                html += '<p class="text-xl font-bold text-orange-500">$' + item.price.toFixed(2) + '</p>';
+                html += '<button onclick="toggleAvailability(' + item.id + ')" class="mt-2 px-3 py-1 rounded text-sm ' + (item.available ? 'bg-yellow-500 text-white' : 'bg-green-500 text-white') + '">';
+                html += item.available ? 'Mark Unavailable' : 'Mark Available';
+                html += '</button></div></div>';
+            }
+            
+            menuList.innerHTML = html;
+        }
+
+        function toggleAvailability(itemId) {
+            for (var i = 0; i < menuItems.length; i++) {
+                if (menuItems[i].id === itemId) {
+                    menuItems[i].available = !menuItems[i].available;
+                    break;
+                }
+            }
+            displayOwnerMenu();
+            displayMenu();
+            showNotification('🍽️', 'Menu Updated', 'Item availability updated');
+        }
+
+        function displayOwnerBookings() {
+            var bookingOverview = document.getElementById('booking-overview');
+            var html = '';
+            
+            for (var i = 0; i < timeSlots.length; i++) {
+                var slot = timeSlots[i];
+                var percentage = (slot.booked / slot.total) * 100;
+                var colorClass = 'bg-green-500';
+                if (percentage > 80) colorClass = 'bg-red-500';
+                else if (percentage > 60) colorClass = 'bg-yellow-500';
+                
+                html += '<div class="border border-gray-200 rounded-lg p-4 mb-4">';
+                html += '<div class="flex justify-between items-center mb-2">';
+                html += '<h4 class="font-semibold">' + slot.label + '</h4>';
+                html += '<span class="text-lg font-bold">' + slot.booked + '/' + slot.total + '</span>';
+                html += '</div>';
+                html += '<div class="w-full bg-gray-200 rounded-full h-2 mb-2">';
+                html += '<div class="' + colorClass + ' h-2 rounded-full" style="width: ' + percentage + '%"></div>';
+                html += '</div>';
+                html += '<div class="flex justify-between text-sm text-gray-600">';
+                html += '<span>' + percentage.toFixed(0) + '% occupied</span>';
+                html += '<span>' + (slot.total - slot.booked) + ' seats left</span>';
+                html += '</div></div>';
+            }
+            
+            bookingOverview.innerHTML = html;
+        }
+
+        function updateCapacity() {
+            var newCapacity = parseInt(document.getElementById('total-seats').value);
+            if (newCapacity > 0) {
+                totalSeats = newCapacity;
+                for (var i = 0; i < timeSlots.length; i++) {
+                    timeSlots[i].total = newCapacity;
+                    timeSlots[i].booked = Math.min(timeSlots[i].booked, newCapacity);
+                }
+                displayOwnerBookings();
+                displayTimeSlots();
+                showNotification('🪑', 'Capacity Updated', 'Seat capacity set to ' + newCapacity + ' per slot');
+            }
+        }
+
+        function displayOwnerOrders() {
+            var ordersList = document.getElementById('owner-orders-list');
+            var html = '';
+            
+            if (ownerOrders.length === 0) {
+                html = '<div class="text-center py-8 text-gray-500"><span class="text-4xl mb-2 block">📋</span><p>No active orders</p></div>';
+            } else {
+                for (var i = 0; i < ownerOrders.length; i++) {
+                    var order = ownerOrders[i];
+                    var statusClass = 'bg-yellow-100 text-yellow-800';
+                    var statusIcon = '⏳';
+                    
+                    if (order.status === 'ready') {
+                        statusClass = 'bg-green-100 text-green-800';
+                        statusIcon = '✅';
+                    } else if (order.status === 'preparing') {
+                        statusClass = 'bg-blue-100 text-blue-800';
+                        statusIcon = '👨‍🍳';
+                    }
+                    
+                    html += '<div class="border border-gray-200 rounded-lg p-4 mb-4">';
+                    html += '<div class="flex justify-between items-start mb-3">';
+                    html += '<div><h4 class="font-semibold text-lg">' + order.id + '</h4>';
+                    html += '<p class="text-gray-600">' + order.student + '</p></div>';
+                    html += '<div class="text-right">';
+                    html += '<span class="text-lg font-bold text-orange-600">$' + order.total.toFixed(2) + '</span>';
+                    html += '<div class="mt-1"><span class="px-3 py-1 rounded-full text-sm ' + statusClass + '">' + statusIcon + ' ' + order.status + '</span></div>';
+                    html += '</div></div>';
+                    html += '<p class="text-sm text-gray-600 mb-3">Items: ' + order.items.join(', ') + '</p>';
+                    html += '<div class="flex space-x-2">';
+                    html += '<button onclick="viewReceipt(\'' + order.id + '\')" class="bg-purple-500 text-white px-3 py-1 rounded text-sm">View Receipt</button>';
+                    if (order.status === 'pending') {
+                        html += '<button onclick="updateOrderStatus(\'' + order.id + '\', \'preparing\')" class="bg-blue-500 text-white px-3 py-1 rounded text-sm">Start Preparing</button>';
+                    } else if (order.status === 'preparing') {
+                        html += '<button onclick="updateOrderStatus(\'' + order.id + '\', \'ready\')" class="bg-green-500 text-white px-3 py-1 rounded text-sm">Mark Ready</button>';
+                    }
+                    html += '</div></div>';
+                }
+            }
+            
+            ordersList.innerHTML = html;
+        }
+
+        function updateOrderStatus(orderId, newStatus) {
+            for (var i = 0; i < ownerOrders.length; i++) {
+                if (ownerOrders[i].id === orderId) {
+                    ownerOrders[i].status = newStatus;
+                    break;
+                }
+            }
+            
+            for (var i = 0; i < orders.length; i++) {
+                if (orders[i].id === orderId) {
+                    orders[i].status = newStatus;
+                    break;
+                }
+            }
+            
+            displayOwnerOrders();
+            displayOrders();
+            showNotification('📋', 'Order Updated', 'Order ' + orderId + ' marked as ' + newStatus);
+        }
+
+        function viewReceipt(orderId) {
+            var order = null;
+            for (var i = 0; i < ownerOrders.length; i++) {
+                if (ownerOrders[i].id === orderId) {
+                    order = ownerOrders[i];
+                    break;
+                }
+            }
+            if (order) {
+                showReceipt(order);
+            }
+        }
+
+        function displayOwnerNotices() {
+            var noticesList = document.getElementById('notices-list');
+            var html = '';
+            
+            if (notices.length === 0) {
+                html = '<div class="text-center py-8 text-gray-500"><span class="text-4xl mb-2 block">📢</span><p>No active notices</p></div>';
+            } else {
+                for (var i = 0; i < notices.length; i++) {
+                    var notice = notices[i];
+                    var bgClass = 'bg-blue-50 border-blue-200';
+                    var icon = 'ℹ️';
+                    
+                    if (notice.type === 'warning') {
+                        bgClass = 'bg-yellow-50 border-yellow-200';
+                        icon = '⚠️';
+                    } else if (notice.type === 'closure') {
+                        bgClass = 'bg-red-50 border-red-200';
+                        icon = '🚫';
+                    } else if (notice.type === 'special') {
+                        bgClass = 'bg-green-50 border-green-200';
+                        icon = '🎉';
+                    }
+
+                    html += '<div class="border rounded-lg p-4 mb-4 ' + bgClass + '">';
+                    html += '<div class="flex justify-between items-start mb-2">';
+                    html += '<div class="flex items-center space-x-2">';
+                    html += '<span class="text-xl">' + icon + '</span>';
+                    html += '<h4 class="font-semibold">' + notice.title + '</h4>';
+                    if (notice.urgent) html += '<span class="bg-red-500 text-white px-2 py-1 rounded-full text-xs">URGENT</span>';
+                    html += '</div>';
+                    html += '<button onclick="deleteNotice(' + i + ')" class="text-red-500 hover:text-red-700 text-sm">Delete</button>';
+                    html += '</div>';
+                    html += '<p class="text-gray-700">' + notice.message + '</p>';
+                    html += '</div>';
+                }
+            }
+            
+            noticesList.innerHTML = html;
+        }
+
+        function deleteNotice(index) {
+            if (confirm('Are you sure you want to delete this notice?')) {
+                notices.splice(index, 1);
+                displayOwnerNotices();
+                displayNotices();
+                showNotification('🗑️', 'Notice Deleted', 'The notice has been removed');
+            }
+        }
+
+        function setupOwnerForms() {
+            // Add Item Form
+            document.getElementById('add-item-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                var name = document.getElementById('item-name').value;
+                var price = parseFloat(document.getElementById('item-price').value);
+                var category = document.getElementById('item-category').value;
+                var description = document.getElementById('item-description').value;
+                
+                if (name && price && category && description) {
+                    var newId = Math.max.apply(Math, menuItems.map(function(i) { return i.id; })) + 1;
+                    var emojis = { breakfast: '🥞', lunch: '🍽️', snacks: '🍪', beverages: '🥤' };
+                    
+                    menuItems.push({
+                        id: newId,
+                        name: name,
+                        price: price,
+                        category: category,
+                        description: description,
+                        emoji: emojis[category] || '🍽️',
+                        available: true
+                    });
+                    
+                    displayOwnerMenu();
+                    displayMenu();
+                    this.reset();
+                    showNotification('🍽️', 'Menu Updated!', 'New item added successfully');
+                }
+            });
+
+            // Notice Form
+            document.getElementById('notice-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                var type = document.getElementById('notice-type').value;
+                var title = document.getElementById('notice-title').value;
+                var message = document.getElementById('notice-message').value;
+                var expiry = document.getElementById('notice-expiry').value;
+                var urgent = document.getElementById('notice-urgent').checked;
+
+                if (title && message) {
+                    notices.unshift({
+                        id: 'NOT' + Date.now().toString().slice(-6),
+                        type: type,
+                        title: title,
+                        message: message,
+                        expiry: expiry || null,
+                        urgent: urgent,
+                        createdAt: new Date().toLocaleString()
+                    });
+
+                    displayOwnerNotices();
+                    displayNotices();
+                    this.reset();
+                    showNotification('📢', 'Notice Published!', 'Your notice is now visible to students');
+                }
+            });
+        }
+
+        // Utility Functions
+        function showReceipt(order) {
+            var receiptContent = document.getElementById('receipt-content');
+            var html = '';
+            
+            html += '<div class="border-b pb-4 mb-4">';
+            html += '<div class="flex justify-between text-sm"><span>Order ID:</span><span class="font-bold">' + order.id + '</span></div>';
+            html += '<div class="flex justify-between text-sm"><span>Date:</span><span>' + order.date + '</span></div>';
+            html += '<div class="flex justify-between text-sm"><span>Time:</span><span>' + order.time + '</span></div>';
+            if (order.student) {
+                html += '<div class="flex justify-between text-sm"><span>Customer:</span><span>' + order.student + '</span></div>';
+            }
+            html += '</div>';
+            
+            html += '<div class="space-y-2 mb-4"><h4 class="font-semibold">Order Items:</h4>';
+            for (var i = 0; i < order.itemDetails.length; i++) {
+                var item = order.itemDetails[i];
+                html += '<div class="flex justify-between text-sm">';
+                html += '<span>' + item.name + ' x' + item.quantity + '</span>';
+                html += '<span>$' + (item.price * item.quantity).toFixed(2) + '</span>';
+                html += '</div>';
+            }
+            html += '</div>';
+            
+            html += '<div class="border-t pt-4">';
+            html += '<div class="flex justify-between font-bold text-lg">';
+            html += '<span>Total Amount:</span>';
+            html += '<span class="text-orange-600">$' + order.total.toFixed(2) + '</span>';
+            html += '</div>';
+            html += '<div class="text-center text-sm text-gray-500 mt-4">';
+            html += '<p>Thank you for your order!</p>';
+            html += '</div></div>';
+            
+            receiptContent.innerHTML = html;
+            document.getElementById('receipt-modal').classList.remove('hidden');
+        }
+
+        function closeReceipt() {
+            document.getElementById('receipt-modal').classList.add('hidden');
+        }
+
+
+
+        function showNotification(icon, title, message) {
+            var notification = document.getElementById('notification');
+            document.getElementById('notification-icon').textContent = icon;
+            document.getElementById('notification-title').textContent = title;
+            document.getElementById('notification-message').textContent = message;
+            
+            notification.classList.remove('translate-x-full');
+            
+            setTimeout(function() {
+                notification.classList.add('translate-x-full');
+            }, 3000);
+        }
+
+        // Initialize with sample notices
+        notices = [
+            {
+                id: 'NOT001',
+                type: 'info',
+                title: 'Welcome to Campus Canteen!',
+                message: 'Enjoy our fresh meals and convenient online ordering system.',
+                urgent: false,
+                createdAt: new Date().toLocaleString()
+            },
+            {
+                id: 'NOT002',
+                type: 'special',
+                title: '20% Off Lunch Combos',
+                message: 'Get 20% off on all lunch combo meals this week!',
+                urgent: false,
+                createdAt: new Date().toLocaleString()
+            }
+        ];
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96e0197466ff4148',t:'MTc1NTAwMzAzOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
